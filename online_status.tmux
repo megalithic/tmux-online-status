@@ -2,14 +2,14 @@
 
 CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-dnd_status_icon="#($CURRENT_DIR/scripts/dnd_status.sh)"
-dnd_status_interpolation_string="\#{dnd_status}"
+online_status_info="#($CURRENT_DIR/scripts/online_status.sh)"
+online_status_interpolation_string="\#{online_status}"
 
   source $CURRENT_DIR/scripts/shared.sh
 
 do_interpolation() {
   local string="$1"
-  local interpolated="${string/$dnd_status_interpolation_string/$dnd_status_icon}"
+  local interpolated="${string/$online_status_interpolation_string/$online_status_info}"
   echo "$interpolated"
 }
 

@@ -2,14 +2,6 @@
 
 CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-dnd_on_option_string="@dnd_on_icon"
-dnd_off_option_string="@dnd_off_icon"
-
-dnd_on_icon_osx="DND"
-dnd_on_icon="DND"
-dnd_off_icon_osx=""
-dnd_off_icon=""
-
 source $CURRENT_DIR/shared.sh
 
 is_osx() {
@@ -20,40 +12,49 @@ is_dnd_installed() {
   [ -x "$(command -v do-not-disturb)" ]
 }
 
-dnd_on_icon_default() {
-  if is_osx; then
-    echo "$dnd_on_icon_osx"
-  else
-    echo "$dnd_on_icon"
-  fi
-}
-
-dnd_off_icon_default() {
-  if is_osx; then
-    echo "$dnd_off_icon_osx"
-  else
-    echo "$dnd_off_icon"
-  fi
-}
-
-dnd_status() {
-  if is_dnd_installed; then
+dnd_status_on() {
+  if is_osx && is_dnd_installed; then
     status=$(do-not-disturb status)
     $([ "$status" == "on" ] && true || false)
+  else
+    false
   fi
 }
 
-print_icon() {
-  if $(dnd_status); then
-    printf "$(get_tmux_option "$dnd_on_option_string" "$(dnd_on_icon_default)")"
-  else
-    printf "$(get_tmux_option "$dnd_off_option_string" "$(dnd_off_icon_default)")"
-  fi
 
-  $(dnd_status)
+online_info() {
+  if is_osx; then
+    wan=$(dig +short myip.opendns.com @resolver1.opendns.com)
+
+    tun=""
+    for i in {0..3}
+    do
+      [[ -n $(ifconfig utun$i >/dev/null 2>&1 | rg 'inet ') ]] && tun=$(ifconfig utun$i >/dev/null 2>&1 | rg 'inet ' | awk '{print "["$2"]"}')
+    done
+
+    lan=""
+    for i in {0..8}
+    do
+      [[ -n $(ifconfig en$i >/dev/null 2>&1 | rg 'inet ') ]] && lan=$(ifconfig en$i >/dev/null 2>&1 | rg 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
+    done
+
+    [[ -n $wan ]] && wan="#[fg=brightblue]礪$wan"
+    [[ -n $tun ]] && tun="#[fg=colour136]\uf982$tun"
+    [[ -n $lan ]] && lan="#[fg=yellow] $lan"
+
+    echo "$wan$tun $lan"
+  fi
+}
+
+print_info() {
+  if $(dnd_status_on); then
+    printf ""
+  else
+    printf "$(online_info)"
+  fi
 }
 
 main() {
-  print_icon
+  print_info
 }
 main
